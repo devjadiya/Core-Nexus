@@ -36,8 +36,18 @@ export async function deployMemeToken(name, symbol, initialSupply, description, 
     // Important fix: If the imageUrl is an IPFS URL, ensure it's a valid format
     // Some IPFS URLs can cause issues with ethers.js due to ENS name resolution
     // The contract will store the URL as a string, so we can normalize it first
+    console.log('Original imageUrl type:', typeof imageUrl, 'Value:', imageUrl);
     const safeImageUrl = normalizeIpfsUrl(imageUrl);
-    console.log('Using normalized IPFS URL for deployment:', safeImageUrl);
+    console.log('After normalization:', typeof safeImageUrl, 'Value:', safeImageUrl);
+
+    // Add extra validation to make sure we have a valid URL
+    if (!safeImageUrl || safeImageUrl === '') {
+      console.error('Invalid image URL after normalization');
+      return {
+        success: false,
+        error: 'Invalid image URL format. Please try again with a different image.'
+      };
+    }
     
     // Create contract factory
     const tokenFactory = new ethers.ContractFactory(
@@ -48,6 +58,14 @@ export async function deployMemeToken(name, symbol, initialSupply, description, 
     
     // Default max supply is 10x initial supply
     const maxSupply = initialSupply * 10;
+    
+    console.log('Creating contract with arguments:');
+    console.log('Name:', name);
+    console.log('Symbol:', symbol);
+    console.log('Initial Supply:', initialSupply);
+    console.log('Max Supply:', maxSupply);
+    console.log('Image URL:', safeImageUrl);
+    console.log('Owner:', owner);
     
     // Deploy contract with constructor arguments
     const tokenContract = await tokenFactory.deploy(

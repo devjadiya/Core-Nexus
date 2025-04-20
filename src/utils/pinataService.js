@@ -25,6 +25,12 @@ export const uploadToPinata = async (file) => {
   try {
     // No need to check if PINATA_JWT exists since we have a fallback
     
+    console.log('Starting file upload to Pinata, file details:', {
+      name: file.name,
+      type: file.type,
+      size: file.size
+    });
+    
     // Create form data with the file
     const formData = new FormData();
     formData.append('file', file);
@@ -55,8 +61,11 @@ export const uploadToPinata = async (file) => {
       }
     );
 
+    console.log('Pinata upload response:', response.data);
+    
     // Get the IPFS hash (CID) from the response
     const ipfsHash = response.data.IpfsHash;
+    console.log('IPFS hash (CID):', ipfsHash);
     
     // Create normalized IPFS URL (just the CID, no path or query parameters)
     const ipfsUrl = `ipfs://${ipfsHash.trim()}`;
@@ -64,7 +73,8 @@ export const uploadToPinata = async (file) => {
     // Create gateway URL for easy viewing
     const gatewayUrl = `https://gateway.pinata.cloud/ipfs/${ipfsHash}`;
     
-    console.log('File uploaded to Pinata:', ipfsUrl);
+    console.log('Generated IPFS URL:', ipfsUrl);
+    console.log('Generated Gateway URL:', gatewayUrl);
     
     return { ipfsUrl, gatewayUrl };
   } catch (error) {

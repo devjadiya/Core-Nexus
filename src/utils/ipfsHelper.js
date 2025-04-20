@@ -12,27 +12,58 @@
  */
 export function normalizeIpfsUrl(ipfsUrl) {
   if (!ipfsUrl || typeof ipfsUrl !== 'string') {
+    console.error('Invalid IPFS URL provided:', ipfsUrl);
     return ''; // Return empty string for invalid input
   }
   
-  if (!ipfsUrl.startsWith('ipfs://')) {
-    return ipfsUrl; // Return as-is if not an IPFS URL
-  }
-  
   try {
+    console.log('Normalizing IPFS URL:', ipfsUrl);
+    
+    // Special handling for various IPFS URL formats
+    if (ipfsUrl.startsWith('ipfs://ipfs/')) {
+      // Convert ipfs://ipfs/Qm... to ipfs://Qm...
+      ipfsUrl = ipfsUrl.replace('ipfs://ipfs/', 'ipfs://');
+      console.log('Converted ipfs://ipfs/ format to ipfs://', ipfsUrl);
+    } else if (ipfsUrl.includes('gateway.pinata.cloud/ipfs/')) {
+      // Convert https://gateway.pinata.cloud/ipfs/Qm... to ipfs://Qm...
+      const cid = ipfsUrl.split('/ipfs/')[1];
+      ipfsUrl = `ipfs://${cid}`;
+      console.log('Converted Pinata gateway URL to ipfs://', ipfsUrl);
+    } else if (ipfsUrl.includes('/ipfs/') && !ipfsUrl.startsWith('ipfs://')) {
+      // Convert any gateway URL with /ipfs/ to ipfs://
+      const cid = ipfsUrl.split('/ipfs/')[1];
+      ipfsUrl = `ipfs://${cid}`;
+      console.log('Converted generic gateway URL to ipfs://', ipfsUrl);
+    }
+    
+    // If not an IPFS URL after conversions, return as-is
+    if (!ipfsUrl.startsWith('ipfs://')) {
+      console.log('Not an IPFS URL after conversions, returning as-is:', ipfsUrl);
+      return ipfsUrl;
+    }
+    
     // Extract just the CID part and remove any whitespace or path components
     let cid = ipfsUrl.replace('ipfs://', '').trim();
     
     // If there's a path after the CID, remove it
     if (cid.includes('/')) {
+      const originalCid = cid;
       cid = cid.split('/')[0];
+      console.log(`Removed path from CID: "${originalCid}" -> "${cid}"`);
+    }
+    
+    // Validate the CID looks reasonable (very basic check)
+    if (!isValidIpfsCid(cid)) {
+      console.warn('Generated CID may not be valid:', cid);
     }
     
     // Construct a clean ipfs:// URL with just the CID
-    return `ipfs://${cid}`;
+    const normalizedUrl = `ipfs://${cid}`;
+    console.log('Final normalized IPFS URL:', normalizedUrl);
+    return normalizedUrl;
   } catch (error) {
     console.error('Error normalizing IPFS URL:', error, ipfsUrl);
-    return ipfsUrl; // Return original in case of error
+    return ''; // Return empty string in case of error for safety
   }
 }
 
