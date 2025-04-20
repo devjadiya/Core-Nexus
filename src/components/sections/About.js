@@ -5,138 +5,106 @@ import Button from "../Button";
 import { ThemeProvider } from "styled-components";
 import { dark } from "../../styles/Themes";
 
+// Styled components
 const Section = styled.section`
   min-height: 100vh;
   width: 100%;
-  background-color: ${(props) => props.theme.text};
+  background-color: ${(props) => props.theme.body};
   display: flex;
   justify-content: center;
   align-items: center;
   position: relative;
+  padding: 2rem 0;
 `;
 
 const Container = styled.div`
   width: 75%;
   margin: 0 auto;
-
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
 
-  @media (max-width: 70em) {
-    width: 80%;
-  }
-
   @media (max-width: 64em) {
-    width: 100%;
     flex-direction: column;
-
-    & > *:last-child {
-      width: 80%;
-    }
+    width: 85%;
   }
 
   @media (max-width: 40em) {
-    & > *:last-child {
-      width: 90%;
-    }
+    width: 100%;
   }
 `;
 
 const Box = styled.div`
-  width: 50%;
-  height: 100%;
-  min-height: 60vh;
+  width: 48%;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
 
-  @media (max-width: 40em) {
-    min-height: 50vh;
+  @media (max-width: 64em) {
+    width: 100%;
+    margin-bottom: 2rem;
   }
 `;
 
-const Title = styled.h2`
+const GradientTitle = styled.h2`
   font-size: ${(props) => props.theme.fontxxl};
-  text-transformation: capitalize;
-  color: ${(props) => props.theme.body};
-  align-self: flex-start;
-  width: 80%;
-  margin: 0 auto;
+  text-transform: capitalize;
+  text-align: center;
+  color: #1e90ff;
 
   @media (max-width: 64em) {
-    width: 100%;
-    text-align: center;
-  }
-
-  @media (max-width: 40em) {
     font-size: ${(props) => props.theme.fontxl};
   }
 
-  @media (max-width: 30em) {
+  @media (max-width: 40em) {
     font-size: ${(props) => props.theme.fontlg};
   }
 `;
 
+const HighlightedText = styled.span`
+  color: #ff4500;
+`;
+
 const SubText = styled.p`
   font-size: ${(props) => props.theme.fontlg};
-  color: ${(props) => props.theme.body};
-  align-self: flex-start;
-  width: 80%;
-  margin: 1rem auto;
+  color: ${(props) => `rgba(${props.theme.textRgba}, 0.8)`};
+  text-align: justify;
+  margin: 1rem 0;
   font-weight: 400;
 
   @media (max-width: 64em) {
-    width: 100%;
-    text-align: center;
     font-size: ${(props) => props.theme.fontmd};
   }
 
   @media (max-width: 40em) {
-    font-size: ${(props) => props.theme.fontmd};
-  }
-
-  @media (max-width: 30em) {
     font-size: ${(props) => props.theme.fontsm};
   }
 `;
 
 const SubTextLight = styled.p`
   font-size: ${(props) => props.theme.fontmd};
-  color: ${(props) => `rgba(${props.theme.bodyRgba}, 0.6)`};
-  align-self: flex-start;
-  width: 80%;
-  margin: 1rem auto;
-  font-weight: 400;
+  color: ${(props) => `rgba(${props.theme.textRgba}, 0.6)`};
+  text-align: justify;
+  margin: 1rem 0;
+  font-weight: 300;
 
   @media (max-width: 64em) {
-    width: 100%;
-    text-align: center;
     font-size: ${(props) => props.theme.fontsm};
   }
 
   @media (max-width: 40em) {
-    font-size: ${(props) => props.theme.fontsm};
-  }
-
-  @media (max-width: 30em) {
     font-size: ${(props) => props.theme.fontxs};
   }
 `;
 
 const ButtonContainer = styled.div`
-  width: 80%;
-  margin: 1rem auto;
+  margin-top: 2rem;
   display: flex;
-  align-self: flex-start;
+  justify-content: center;
 
   @media (max-width: 64em) {
     width: 100%;
-
-    button {
-      margin: 0 auto;
-    }
   }
 `;
 
@@ -148,19 +116,20 @@ const About = () => {
           <Carousel />
         </Box>
         <Box>
-          <Title>
-            Welcome To The <br /> Weirdos Club.
-          </Title>
+          <GradientTitle>
+            The Meme Revolution, <br />
+            <HighlightedText>Total Pointless!</HighlightedText>
+          </GradientTitle>
           <SubText>
-            The WEIRDOS CLUB is a private collection of NFTs—unique digital
-            collectibles. The Weirdos are stored as ERC-721 tokens on the
-            Ethereum blockchain and hosted on IPFS.
+            $POINTLESS is a meme coin born for fun and chaos on pump.fun — no
+            utility, no promises, just pure meme madness. It's a community-fueled
+            token with one goal: to go viral or go home.
           </SubText>
           <SubTextLight>
-            With more than 200+ hand drawn traits, each NFT is unique and comes
-            with a membership to an exclusive group of successful investors.
-            Join an ambitious ever-growing community with multiple benefits and
-            utilities.
+            There’s no roadmap set in stone, only a wild ride of viral
+            campaigns, unexpected collabs, NFT drops, and governance by the
+            most pointless DAO ever imagined. Join the most unserious project
+            with the most serious vibes.
           </SubTextLight>
           <ButtonContainer>
             <ThemeProvider theme={dark}>
