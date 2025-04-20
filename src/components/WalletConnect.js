@@ -74,8 +74,7 @@ const WalletConnect = ({ onConnect, buttonStyle }) => {
   const [networkName, setNetworkName] = useState('');
   const [error, setError] = useState('');
   const [connectionAttempts, setConnectionAttempts] = useState(0);
-  const [initialCheckDone, setInitialCheckDone] = useState(false);
-
+  
   // Check if the network is Arbitrum Sepolia
   const checkNetwork = async (provider) => {
     try {
@@ -136,10 +135,10 @@ const WalletConnect = ({ onConnect, buttonStyle }) => {
     }
   };
 
-  // Connect wallet with retry mechanism for rate limiting
+  // Connect wallet with heavy rate limit protection
   const connectWallet = async () => {
-    if (connectionAttempts > 5) {
-      setError('Too many connection attempts. Please try again later.');
+    if (connectionAttempts > 3) {
+      setError('Too many connection attempts. Please refresh the page and try again.');
       setConnectionAttempts(0);
       return;
     }
@@ -153,53 +152,44 @@ const WalletConnect = ({ onConnect, buttonStyle }) => {
         throw new Error('MetaMask not detected. Please install MetaMask to continue.');
       }
       
-      // Add rate limit protection with exponential backoff
-      const connectWithRetry = async (retries = 3, delay = 2000) => {
-        try {
-          // Request account access
-          const accounts = await window.ethereum.request({ 
-            method: 'eth_requestAccounts',
-            params: []
-          });
+      try {
+        // Simple direct connection attempt with no retries
+        const accounts = await window.ethereum.request({ 
+          method: 'eth_requestAccounts'
+        });
+        
+        if (accounts && accounts.length > 0) {
+          // Get the provider and signer
+          const provider = new ethers.providers.Web3Provider(window.ethereum);
+          await checkNetwork(provider);
           
-          if (accounts && accounts.length > 0) {
-            // Get the provider and signer
-            const provider = new ethers.providers.Web3Provider(window.ethereum);
-            await checkNetwork(provider);
-            
-            // Set account
-            const address = accounts[0];
-            setAccount(address);
-            
-            // Get signer
-            const signer = provider.getSigner();
-            
-            // Call the onConnect callback with the signer
-            if (onConnect) {
-              onConnect(signer);
-            }
-            
-            return true;
+          // Set account
+          const address = accounts[0];
+          setAccount(address);
+          
+          // Get signer
+          const signer = provider.getSigner();
+          
+          // Call the onConnect callback with the signer
+          if (onConnect) {
+            onConnect(signer);
           }
-          return false;
-        } catch (error) {
-          // Handle rate limiting errors
-          if (error.message && (error.message.includes('rate limit') || error.message.includes('request limit exceeded'))) {
-            console.log(`Rate limited. Retries left: ${retries}`);
-            setError(`Rate limited. Retrying... (${retries} attempts left)`);
-            
-            if (retries > 0) {
-              // Wait with exponential backoff
-              await new Promise(resolve => setTimeout(resolve, delay));
-              return connectWithRetry(retries - 1, delay * 3);
-            }
-          }
+          
+          // Set up event listeners after successful connection
+          setupEventListeners(provider);
+          
+          return;
+        }
+      } catch (error) {
+        // Handle rate limiting errors
+        if (error.message && (error.message.includes('rate limit') || error.message.includes('request limit exceeded'))) {
+          console.log('Rate limited during wallet connection');
+          setError('MetaMask is rate limited. Please wait a minute before trying again, or refresh the page.');
+          setConnectionAttempts(prev => prev + 1);
+        } else {
           throw error;
         }
-      };
-      
-      await connectWithRetry();
-      setConnectionAttempts(0);
+      }
     } catch (error) {
       console.error('Connection error:', error);
       setError(error.message || 'Failed to connect wallet');
@@ -209,56 +199,35 @@ const WalletConnect = ({ onConnect, buttonStyle }) => {
     }
   };
 
-  // Setup event listeners
-  useEffect(() => {
-    // We only want to run the initial check once to avoid rate limiting
-    if (initialCheckDone) return;
-
-    const setupListeners = async () => {
-      if (window.ethereum) {
-        // Initial check for network only (avoid account checking on load)
-        try {
-          const provider = new ethers.providers.Web3Provider(window.ethereum);
-          await checkNetwork(provider);
-          
-          // We no longer automatically check accounts on page load
-          // This avoids rate limiting issues
-          
-          // Setup listeners for account and chain changes
-          window.ethereum.on('accountsChanged', (accounts) => {
-            if (accounts.length > 0) {
-              setAccount(accounts[0]);
-              
-              if (onConnect) {
-                const provider = new ethers.providers.Web3Provider(window.ethereum);
-                onConnect(provider.getSigner());
-              }
-            } else {
-              setAccount(null);
-            }
-          });
-          
-          window.ethereum.on('chainChanged', () => {
-            // Refresh on chain change
-            window.location.reload();
-          });
-
-          setInitialCheckDone(true);
-        } catch (error) {
-          console.error('Error during initial setup:', error);
+  // Setup event listeners - only called after successful connection
+  const setupEventListeners = (provider) => {
+    // Setup listeners for account and chain changes
+    window.ethereum.on('accountsChanged', (accounts) => {
+      if (accounts.length > 0) {
+        setAccount(accounts[0]);
+        
+        if (onConnect) {
+          onConnect(provider.getSigner());
         }
+      } else {
+        setAccount(null);
       }
-    };
+    });
     
-    setupListeners();
-    
-    // Cleanup listeners
+    window.ethereum.on('chainChanged', () => {
+      // Refresh on chain change
+      window.location.reload();
+    });
+  };
+
+  // Cleanup listeners
+  useEffect(() => {
     return () => {
       if (window.ethereum) {
         window.ethereum.removeAllListeners();
       }
     };
-  }, [onConnect, initialCheckDone]);
+  }, []);
 
   return (
     <div>

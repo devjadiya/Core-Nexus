@@ -1,7 +1,10 @@
 import axios from 'axios';
 
-// Get JWT token from .env file
-const PINATA_JWT = process.env.REACT_APP_PINATA_JWT;
+// Hardcoded token for production environment only - SECURITY RISK, replace with proper env vars
+const PRODUCTION_PINATA_JWT = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySW5mb3JtYXRpb24iOnsiaWQiOiI0NWNlNWJjYi1lYTNkLTQzNTktYWIxNS01MDQ0NDE3OGY0MTYiLCJlbWFpbCI6InVuaXZlcnNlYm9zczc4QGdtYWlsLmNvbSIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJwaW5fcG9saWN5Ijp7InJlZ2lvbnMiOlt7ImRlc2lyZWRSZXBsaWNhdGlvbkNvdW50IjoxLCJpZCI6IkZSQTEifSx7ImRlc2lyZWRSZXBsaWNhdGlvbkNvdW50IjoxLCJpZCI6Ik5ZQzEifV0sInZlcnNpb24iOjF9LCJtZmFfZW5hYmxlZCI6ZmFsc2UsInN0YXR1cyI6IkFDVElWRSJ9LCJhdXRoZW50aWNhdGlvblR5cGUiOiJzY29wZWRLZXkiLCJzY29wZWRLZXlLZXkiOiJlNjg3ZjM2NWMzZjY4NTM4ZjM5MSIsInNjb3BlZEtleVNlY3JldCI6IjU0MzNmZDIyOTExYzQ5NzE2OGIzMDAyZGE3M2VhNmFhODgwNWNiNTkyZDZmY2NjZTE0NzRmYzZiODJjMGY5MTMiLCJleHAiOjE3NzY2NzQzMjh9.VRkLH68grWdZnV1rCufVxxIQoTMByAgm2z8culRM9aM";
+
+// Get JWT token from .env file or use production fallback
+const PINATA_JWT = process.env.REACT_APP_PINATA_JWT || PRODUCTION_PINATA_JWT;
 
 // Check if JWT is available
 if (!PINATA_JWT) {
@@ -20,10 +23,8 @@ function createError(message) {
  */
 export const uploadToPinata = async (file) => {
   try {
-    if (!PINATA_JWT) {
-      throw createError('Pinata JWT is missing. Check your .env file.');
-    }
-
+    // No need to check if PINATA_JWT exists since we have a fallback
+    
     // Create form data with the file
     const formData = new FormData();
     formData.append('file', file);
@@ -40,6 +41,8 @@ export const uploadToPinata = async (file) => {
     });
     formData.append('pinataOptions', pinataOptions);
 
+    console.log('Uploading to Pinata...');
+    
     // Upload to Pinata
     const response = await axios.post(
       'https://api.pinata.cloud/pinning/pinFileToIPFS',
@@ -81,9 +84,7 @@ export const uploadToPinata = async (file) => {
  */
 export const checkIfFileExists = async (cid) => {
   try {
-    if (!PINATA_JWT) {
-      throw createError('Pinata JWT is missing.');
-    }
+    // No need to check if PINATA_JWT exists since we have a fallback
     
     const response = await axios.get(
       `https://api.pinata.cloud/pinning/pinList?hashContains=${cid}`,
