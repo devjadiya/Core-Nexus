@@ -184,7 +184,21 @@ const Roadmap = () => {
 
   useLayoutEffect(() => {
     let t1 = gsap.timeline();
+    let triggers = [];
+
     revealRefs.current.forEach((el, index) => {
+      // Create and store all ScrollTrigger instances
+      let trigger = ScrollTrigger.create({
+        id: `section-${index + 1}`,
+        trigger: el,
+        start: "top center+=200px",
+        end: "bottom bottom",
+        scrub: true,
+        // markers: true
+      });
+      
+      triggers.push(trigger);
+      
       t1.fromTo(
         el.childNodes[0],
         {
@@ -192,20 +206,20 @@ const Roadmap = () => {
         },
         {
           y: "-30",
-
-          scrollTrigger: {
-            id: `section-${index + 1}`,
-            trigger: el,
-            start: "top center+=200px",
-            end: "bottom bottom",
-            scrub: true,
-            // markers: true
-          },
+          scrollTrigger: trigger,
         }
       );
     });
 
-    return () => {};
+    return () => {
+      // Clean up all ScrollTrigger instances
+      triggers.forEach(trigger => {
+        if (trigger) trigger.kill();
+      });
+      
+      // Clean up the timeline
+      if (t1) t1.kill();
+    };
   }, []);
 
   return (

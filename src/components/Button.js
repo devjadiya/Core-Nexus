@@ -38,7 +38,15 @@ const Btn = styled.button`
   }
 `;
 
-const Button = ({ text, link }) => {
+const Button = ({ text, link, onClick, disabled }) => {
+  if (onClick) {
+    return (
+      <Btn onClick={onClick} disabled={disabled} style={disabled ? { opacity: 0.6, cursor: 'not-allowed' } : {}}>
+        {text}
+      </Btn>
+    );
+  }
+  
   return (
     <Btn>
       <a href={link} aria-label={text} target="_blank" rel="noreferrer">

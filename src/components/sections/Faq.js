@@ -71,7 +71,7 @@ const Faq = () => {
   useLayoutEffect(() => {
     let element = ref.current;
 
-    ScrollTrigger.create({
+    let scrollTrigger = ScrollTrigger.create({
       trigger: element,
       start: "top top",
       end: "bottom top",
@@ -82,7 +82,7 @@ const Faq = () => {
     });
 
     return () => {
-      ScrollTrigger.kill();
+      if (scrollTrigger) scrollTrigger.kill();
     };
   }, []);
 

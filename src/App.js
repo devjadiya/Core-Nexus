@@ -1,6 +1,7 @@
 import { ThemeProvider } from "styled-components";
 import GlobalStyles from "./styles/GlobalStyles";
 import { light } from "./styles/Themes";
+import { Routes, Route } from "react-router-dom";
 
 import Navigation from "./components/Navigation";
 import Home from "./components/sections/Home";
@@ -11,6 +12,8 @@ import Team from "./components/sections/Team";
 import Faq from "./components/sections/Faq";
 import Footer from "./components/Footer";
 import ScrollToTop from "./components/ScrollToTop";
+import MemeTokenGenerator from "./components/MemeTokenGenerator";
+import TokenDetails from "./components/TokenDetails";
 
 function App() {
   return (
@@ -18,12 +21,20 @@ function App() {
       <GlobalStyles />
       <ThemeProvider theme={light}>
         <Navigation />
-        <Home />
-        <About />
-        <Roadmap />
-        <Showcase />
-        <Team />
-        <Faq />
+        <Routes>
+          <Route path="/" element={
+            <>
+              <Home />
+              <About />
+              <Roadmap />
+              <Showcase />
+              <Team />
+              <Faq />
+            </>
+          } />
+          <Route path="/create" element={<MemeTokenGenerator />} />
+          <Route path="/token/:address" element={<TokenDetails />} />
+        </Routes>
         <Footer />
         <ScrollToTop />
       </ThemeProvider>

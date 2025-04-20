@@ -79,16 +79,27 @@ const DrawSvg = () => {
         },
         onToggle: (self) => {
           if (self.isActive) {
-            ballRef.current.style.display = "none";
+            // Only attempt to modify the style if ballRef.current exists
+            if (ballRef.current) {
+              ballRef.current.style.display = "none";
+            }
           } else {
-            ballRef.current.style.display = "inline-block";
+            // Only attempt to modify the style if ballRef.current exists
+            if (ballRef.current) {
+              ballRef.current.style.display = "inline-block";
+            }
           }
         },
       },
     });
 
     return () => {
-      if (t1) t1.kill();
+      // Explicitly kill the timeline and its ScrollTrigger
+      if (t1) {
+        const st = t1.scrollTrigger;
+        if (st) st.kill();
+        t1.kill();
+      }
     };
   }, []);
 

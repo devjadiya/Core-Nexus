@@ -1,70 +1,80 @@
-# Getting Started with Create React App
+# Meme Token Generator
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A simple platform for creating custom ERC20 tokens with meme images, similar to pump.fun. Deploy your own meme tokens on Arbitrum Sepolia testnet in seconds!
 
-## Available Scripts
+## Features
 
-In the project directory, you can run:
+- **ERC20 Token Creation**: Create custom tokens with your chosen name, symbol, and supply
+- **IPFS Image Storage**: Upload and store token images on IPFS
+- **MetaMask Integration**: Connect with MetaMask to deploy tokens
+- **Arbitrum Sepolia**: Deployed to Arbitrum Sepolia testnet for fast and cheap transactions
+- **Token Details Page**: View your token details after creation
 
-### `npm start`
+## Tech Stack
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+- **Frontend**: React.js with Next.js
+- **Smart Contracts**: Solidity
+- **Blockchain Interaction**: ethers.js
+- **IPFS Storage**: NFT.Storage
+- **Form Handling**: react-hook-form
+- **Styling**: styled-components
+- **Smart Contract Development**: Hardhat
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## Getting Started
 
-### `npm test`
+### Prerequisites
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+- Node.js (v14 or later)
+- MetaMask extension installed in your browser
+- Arbitrum Sepolia testnet ETH (available from faucets)
 
-### `npm run build`
+### Installation
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+1. Clone the repository
+   ```
+   git clone <repository-url>
+   cd meme-token-generator
+   ```
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+2. Install dependencies
+   ```
+   npm install
+   ```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+3. Add your NFT.Storage API key
+   - Register at [nft.storage](https://nft.storage)
+   - Get your API key
+   - Update the key in `src/utils/deployContract.js`
 
-### `npm run eject`
+4. Start the development server
+   ```
+   npm start
+   ```
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+## How to Use
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+1. Navigate to `/create` to access the token creation page
+2. Connect your MetaMask wallet (ensure you're on Arbitrum Sepolia testnet)
+3. Fill in the token details:
+   - Token Name
+   - Token Symbol
+   - Initial Supply
+   - Upload a token image
+4. Click "Create Token"
+5. Confirm the transaction in MetaMask
+6. Once deployed, you'll be redirected to your token's details page
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+## Smart Contract
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+The MemeToken contract is a simple ERC20 token with the following features:
+- Standard ERC20 functionality (transfer, balanceOf, etc.)
+- Token image stored as IPFS hash
+- No ownership or pausing features to keep it simple
 
-## Learn More
+## Deployment
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+The contract is deployed to Arbitrum Sepolia testnet. The frontend automatically handles deployment through the connected MetaMask wallet.
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+## License
 
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+MIT

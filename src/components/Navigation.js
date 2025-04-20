@@ -1,7 +1,9 @@
 import React, { useState } from "react";
 import styled from "styled-components";
+import { Link, useNavigate } from "react-router-dom";
 import Button from "./Button";
 import Logo from "./Logo";
+import WalletConnect from "./WalletConnect";
 
 const Section = styled.section`
   width: 100vw;
@@ -135,8 +137,14 @@ const HamburguerMenu = styled.span`
   }
 `;
 
+const StyledLink = styled(Link)`
+  text-decoration: none;
+  color: inherit;
+`;
+
 const Navigation = () => {
   const [click, setClick] = useState(false);
+  const navigate = useNavigate();
 
   const scrollTo = (id) => {
     let element = document.getElementById(id);
@@ -150,6 +158,21 @@ const Navigation = () => {
     setClick(!click);
   };
 
+  const handleHomeClick = () => {
+    navigate('/');
+    setTimeout(() => {
+      const element = document.getElementById('home');
+      if (element) {
+        element.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+          inline: "nearest",
+        });
+      }
+    }, 100);
+    setClick(!click);
+  };
+
   return (
     <Section id="navigation">
       <NavBar>
@@ -158,20 +181,23 @@ const Navigation = () => {
           &nbsp;
         </HamburguerMenu>
         <Menu click={click}>
-          <MenuItem onClick={() => scrollTo("home")}>Home</MenuItem>
+          <MenuItem onClick={handleHomeClick}>Home</MenuItem>
           <MenuItem onClick={() => scrollTo("about")}>About</MenuItem>
           <MenuItem onClick={() => scrollTo("roadmap")}>Roadmap</MenuItem>
           <MenuItem onClick={() => scrollTo("showcase")}>Showcase</MenuItem>
           <MenuItem onClick={() => scrollTo("team")}>Team</MenuItem>
           <MenuItem onClick={() => scrollTo("faq")}>Faq</MenuItem>
           <MenuItem>
+            <StyledLink to="/create">Create Token</StyledLink>
+          </MenuItem>
+          <MenuItem>
             <div className="mobile">
-              <Button text="Connect Wallet" link="https://www.google.com.br/" />
+              <WalletConnect buttonStyle={true} />
             </div>
           </MenuItem>
         </Menu>
         <div className="desktop">
-          <Button text="Connect Wallet" link="https://www.google.com.br/" />
+          <WalletConnect buttonStyle={true} />
         </div>
       </NavBar>
     </Section>
