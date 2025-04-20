@@ -13,7 +13,7 @@ const Section = styled.section`
 
 const Title = styled.h1`
   font-size: ${(props) => props.theme.fontxxl};
-  text-transformation: capitalize;
+  text-transform: capitalize;
   color: ${(props) => props.theme.text};
   display: flex;
   justify-content: center;
@@ -82,10 +82,12 @@ const Items = styled.ul`
         }
       }
     }
+
     p {
       border-radius: 40px 0 40px 0;
     }
   }
+
   & > *:nth-of-type(2n) {
     justify-content: end;
 
@@ -97,11 +99,13 @@ const Items = styled.ul`
       border-radius: 0 50px 0 50px;
       text-align: left;
     }
+
     p {
       border-radius: 0 40px 0 40px;
     }
   }
 `;
+
 const Item = styled.li`
   width: 100%;
   height: 100%;
@@ -147,9 +151,8 @@ const SubTitle = styled.span`
 const Text = styled.span`
   display: block;
   font-size: ${(props) => props.theme.fontsm};
-  text-transform: capitalize;
+  text-transform: none;
   color: ${(props) => props.theme.text};
-
   font-weight: 400;
   margin: 0.5rem 0;
 
@@ -201,9 +204,7 @@ const Roadmap = () => {
       
       t1.fromTo(
         el.childNodes[0],
-        {
-          y: "0",
-        },
+        { y: "0" },
         {
           y: "-30",
           scrollTrigger: trigger,
@@ -233,28 +234,28 @@ const Roadmap = () => {
           <Item>&nbsp;</Item>
           <RoadMapItem
             addToRef={addToRefs}
-            title="Grand Opening"
-            subtext="Lorem Ipsum Dolor Sit Amet Consectetur, Adipisicing Elit. At Repellat Placeat, Adipisicing Elit. At Repellat Placeat."
+            title="🚀 Meme Coin Launch"
+            subtext="Launch token on pump.fun with fair distribution and instant LP."
           />
           <RoadMapItem
             addToRef={addToRefs}
-            title="Great Benefits"
-            subtext="Lorem Ipsum Dolor Sit Amet Consectetur, Adipisicing Elit. At Repellat Placeat, Adipisicing Elit. At Repellat Placeat."
+            title="📢 Viral Marketing"
+            subtext="Explode on Twitter, X spaces, Reddit, and memes galore."
           />
           <RoadMapItem
             addToRef={addToRefs}
-            title="Early Access"
-            subtext="Lorem Ipsum Dolor Sit Amet Consectetur, Adipisicing Elit. At Repellat Placeat, Adipisicing Elit. At Repellat Placeat."
+            title="🧠 DAO & Governance"
+            subtext="Activate community-led treasury, proposals and voting."
           />
           <RoadMapItem
             addToRef={addToRefs}
-            title="New Merch"
-            subtext="Lorem Ipsum Dolor Sit Amet Consectetur, Adipisicing Elit. At Repellat Placeat, Adipisicing Elit. At Repellat Placeat."
+            title="🎨 NFTs & Merch"
+            subtext="Drop meme NFTs and limited merch for top holders."
           />
           <RoadMapItem
             addToRef={addToRefs}
-            title="Holders Ranking"
-            subtext="Lorem Ipsum Dolor Sit Amet Consectetur, Adipisicing Elit. At Repellat Placeat, Adipisicing Elit. At Repellat Placeat."
+            title="🔥 Pump & Moon"
+            subtext="List on aggregators, partner with influencers, and go interchain."
           />
         </Items>
       </Container>
