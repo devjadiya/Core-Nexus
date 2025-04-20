@@ -1,244 +1,297 @@
 import React, { useState, useEffect } from 'react';
-import { ethers } from 'ethers';
 import styled from 'styled-components';
-import Button from './Button';
+import { ethers } from 'ethers';
 
-const StyledButton = styled.button`
-  background-color: #4CAF50;
-  color: white;
-  padding: 10px 15px;
-  border: none;
-  border-radius: 4px;
+const Button = styled.button`
+  background-color: ${props => props.buttonStyle ? '#0d6efd' : 'transparent'};
+  color: ${props => props.buttonStyle ? 'white' : '#0d6efd'};
+  border: ${props => props.buttonStyle ? 'none' : '1px solid #0d6efd'};
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
   cursor: pointer;
-  font-size: 16px;
-  transition: background-color 0.3s;
-
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  
   &:hover {
-    background-color: #45a049;
+    background-color: ${props => props.buttonStyle ? '#0b5ed7' : 'rgba(13, 110, 253, 0.1)'};
   }
-
+  
   &:disabled {
-    background-color: #cccccc;
+    opacity: 0.6;
     cursor: not-allowed;
   }
 `;
 
-const WalletStatus = styled.div`
-  margin-top: 10px;
+const Address = styled.span`
+  border-radius: 16px;
+  padding: 8px 12px;
+  background-color: rgba(13, 110, 253, 0.1);
+  color: #0d6efd;
   font-size: 14px;
-  color: #ff6b6b;
-  background-color: rgba(255, 107, 107, 0.1);
-  padding: 8px;
-  border-radius: 4px;
+  font-weight: 500;
   display: flex;
   align-items: center;
-  justify-content: center;
-  
-  &:before {
-    content: "⚠️";
-    margin-right: 8px;
-  }
-`;
-
-const ConnectedInfo = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  gap: 8px;
 `;
 
 const NetworkBadge = styled.div`
-  background-color: #673ab7;
-  color: white;
-  font-size: 12px;
+  display: inline-flex;
+  align-items: center;
+  margin-left: 10px;
+  border-radius: 12px;
   padding: 4px 8px;
-  border-radius: 10px;
-  margin-top: 6px;
+  font-size: 12px;
+  color: white;
+  background-color: ${props => props.isCorrectNetwork ? '#22c55e' : '#ef4444'};
+
+  &:before {
+    content: '';
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: ${props => props.isCorrectNetwork ? '#22c55e' : '#ef4444'};
+    margin-right: 5px;
+    box-shadow: 0 0 5px ${props => props.isCorrectNetwork ? '#22c55e' : '#ef4444'};
+  }
 `;
 
-const WalletConnect = ({ onConnect, buttonStyle = false }) => {
-  const [account, setAccount] = useState('');
-  const [provider, setProvider] = useState(null);
-  const [signer, setSigner] = useState(null);
+const ErrorMessage = styled.div`
+  color: #ef4444;
+  font-size: 14px;
+  margin-top: 8px;
+`;
+
+const WalletConnect = ({ onConnect, buttonStyle }) => {
+  const [account, setAccount] = useState(null);
   const [isConnecting, setIsConnecting] = useState(false);
-  const [isArbitrumSepolia, setIsArbitrumSepolia] = useState(false);
+  const [isCorrectNetwork, setIsCorrectNetwork] = useState(false);
   const [networkName, setNetworkName] = useState('');
+  const [error, setError] = useState('');
+  const [connectionAttempts, setConnectionAttempts] = useState(0);
+  const [initialCheckDone, setInitialCheckDone] = useState(false);
 
-  useEffect(() => {
-    // Check if MetaMask is installed
-    if (window.ethereum) {
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      setProvider(provider);
-
-      // Check if already connected
-      provider.listAccounts().then(accounts => {
-        if (accounts.length > 0) {
-          setAccount(accounts[0]);
-          setSigner(provider.getSigner());
-          checkNetwork(provider);
-          
-          if (onConnect) {
-            onConnect(provider.getSigner());
-          }
-        }
-      });
-
-      // Handle account changes
-      window.ethereum.on('accountsChanged', (accounts) => {
-        if (accounts.length > 0) {
-          setAccount(accounts[0]);
-          setSigner(provider.getSigner());
-          
-          if (onConnect) {
-            onConnect(provider.getSigner());
-          }
-        } else {
-          setAccount('');
-          setSigner(null);
-        }
-      });
-
-      // Handle chain changes
-      window.ethereum.on('chainChanged', () => {
-        checkNetwork(provider);
-      });
-    }
-    
-    return () => {
-      // Clean up event listeners
-      if (window.ethereum) {
-        window.ethereum.removeListener('accountsChanged', () => {});
-        window.ethereum.removeListener('chainChanged', () => {});
-      }
-    };
-  }, [onConnect]);
-
+  // Check if the network is Arbitrum Sepolia
   const checkNetwork = async (provider) => {
     try {
       const network = await provider.getNetwork();
-      setIsArbitrumSepolia(network.chainId === 421614);
+      const chainId = network.chainId;
+      
+      // Arbitrum Sepolia chainId is 421614
+      const isArbSepoliaNetwork = chainId === 421614;
+      setIsCorrectNetwork(isArbSepoliaNetwork);
       
       // Set network name for display
-      if (network.chainId === 421614) {
+      if (isArbSepoliaNetwork) {
         setNetworkName('Arbitrum Sepolia');
-      } else if (network.chainId === 1) {
-        setNetworkName('Ethereum Mainnet');
-      } else if (network.chainId === 42161) {
-        setNetworkName('Arbitrum One');
       } else {
-        setNetworkName(network.name);
+        setNetworkName(network.name === 'unknown' ? `Chain ID: ${chainId}` : network.name);
       }
+      
+      return isArbSepoliaNetwork;
     } catch (error) {
       console.error('Error checking network:', error);
+      return false;
     }
   };
 
-  const connectWallet = async () => {
+  // Handle network change
+  const handleNetworkChange = async () => {
     try {
-      setIsConnecting(true);
-      if (window.ethereum) {
-        // Request account access
-        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-        
-        // Check if connected to Arbitrum Sepolia
-        await checkNetwork(provider);
-        
-        // Switch to Arbitrum Sepolia if not on it
-        if (!isArbitrumSepolia) {
-          try {
-            await window.ethereum.request({
-              method: 'wallet_addEthereumChain',
-              params: [{
-                chainId: '0x66EEE', // 421614 in hex
-                chainName: 'Arbitrum Sepolia',
-                nativeCurrency: {
-                  name: 'ETH',
-                  symbol: 'ETH',
-                  decimals: 18
-                },
-                rpcUrls: ['https://sepolia-rollup.arbitrum.io/rpc'],
-                blockExplorerUrls: ['https://sepolia.arbiscan.io/']
-              }]
-            });
-            
-            // Check network again after switch
-            await checkNetwork(provider);
-          } catch (switchError) {
-            console.error('Failed to switch network:', switchError);
-          }
-        }
-        
-        // Set account and signer
-        setAccount(accounts[0]);
-        const signer = provider.getSigner();
-        setSigner(signer);
-        
-        // Call the onConnect callback
-        if (onConnect) {
-          onConnect(signer);
+      await window.ethereum.request({
+        method: 'wallet_switchEthereumChain',
+        params: [{ chainId: '0x66EEE' }] // 421614 in hex
+      });
+    } catch (switchError) {
+      // This error code indicates that the chain has not been added to MetaMask
+      if (switchError.code === 4902) {
+        try {
+          await window.ethereum.request({
+            method: 'wallet_addEthereumChain',
+            params: [{
+              chainId: '0x66EEE', // 421614 in hex
+              chainName: 'Arbitrum Sepolia',
+              nativeCurrency: {
+                name: 'ETH',
+                symbol: 'ETH',
+                decimals: 18
+              },
+              rpcUrls: ['https://sepolia-rollup.arbitrum.io/rpc'],
+              blockExplorerUrls: ['https://sepolia.arbiscan.io/']
+            }]
+          });
+        } catch (addError) {
+          console.error('Error adding network:', addError);
+          setError('Failed to add Arbitrum Sepolia network. Please add it manually.');
         }
       } else {
-        window.open('https://metamask.io/download/', '_blank');
+        console.error('Failed to switch network:', switchError);
+        setError('Failed to switch to Arbitrum Sepolia network.');
       }
+    }
+  };
+
+  // Connect wallet with retry mechanism for rate limiting
+  const connectWallet = async () => {
+    if (connectionAttempts > 5) {
+      setError('Too many connection attempts. Please try again later.');
+      setConnectionAttempts(0);
+      return;
+    }
+
+    setIsConnecting(true);
+    setError('');
+    
+    try {
+      // Check if MetaMask is installed
+      if (!window.ethereum) {
+        throw new Error('MetaMask not detected. Please install MetaMask to continue.');
+      }
+      
+      // Add rate limit protection with exponential backoff
+      const connectWithRetry = async (retries = 3, delay = 2000) => {
+        try {
+          // Request account access
+          const accounts = await window.ethereum.request({ 
+            method: 'eth_requestAccounts',
+            params: []
+          });
+          
+          if (accounts && accounts.length > 0) {
+            // Get the provider and signer
+            const provider = new ethers.providers.Web3Provider(window.ethereum);
+            await checkNetwork(provider);
+            
+            // Set account
+            const address = accounts[0];
+            setAccount(address);
+            
+            // Get signer
+            const signer = provider.getSigner();
+            
+            // Call the onConnect callback with the signer
+            if (onConnect) {
+              onConnect(signer);
+            }
+            
+            return true;
+          }
+          return false;
+        } catch (error) {
+          // Handle rate limiting errors
+          if (error.message && (error.message.includes('rate limit') || error.message.includes('request limit exceeded'))) {
+            console.log(`Rate limited. Retries left: ${retries}`);
+            setError(`Rate limited. Retrying... (${retries} attempts left)`);
+            
+            if (retries > 0) {
+              // Wait with exponential backoff
+              await new Promise(resolve => setTimeout(resolve, delay));
+              return connectWithRetry(retries - 1, delay * 3);
+            }
+          }
+          throw error;
+        }
+      };
+      
+      await connectWithRetry();
+      setConnectionAttempts(0);
     } catch (error) {
-      console.error('Error connecting wallet:', error);
+      console.error('Connection error:', error);
+      setError(error.message || 'Failed to connect wallet');
+      setConnectionAttempts(prev => prev + 1);
     } finally {
       setIsConnecting(false);
     }
   };
 
-  const formatAddress = (address) => {
-    return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
-  };
+  // Setup event listeners
+  useEffect(() => {
+    // We only want to run the initial check once to avoid rate limiting
+    if (initialCheckDone) return;
 
-  // Button style for the navbar
-  if (buttonStyle) {
-    if (!account) {
-      return (
-        <Button 
-          text={isConnecting ? "Connecting..." : "Connect Wallet"} 
-          onClick={connectWallet}
-          disabled={isConnecting}
-        />
-      );
-    } else {
-      return (
-        <ConnectedInfo>
-          <Button 
-            text={formatAddress(account)} 
-            disabled={true}
-          />
-          {!isArbitrumSepolia && (
-            <NetworkBadge>
-              Switch to Arbitrum Sepolia
-            </NetworkBadge>
-          )}
-        </ConnectedInfo>
-      );
-    }
-  }
+    const setupListeners = async () => {
+      if (window.ethereum) {
+        // Initial check for network only (avoid account checking on load)
+        try {
+          const provider = new ethers.providers.Web3Provider(window.ethereum);
+          await checkNetwork(provider);
+          
+          // We no longer automatically check accounts on page load
+          // This avoids rate limiting issues
+          
+          // Setup listeners for account and chain changes
+          window.ethereum.on('accountsChanged', (accounts) => {
+            if (accounts.length > 0) {
+              setAccount(accounts[0]);
+              
+              if (onConnect) {
+                const provider = new ethers.providers.Web3Provider(window.ethereum);
+                onConnect(provider.getSigner());
+              }
+            } else {
+              setAccount(null);
+            }
+          });
+          
+          window.ethereum.on('chainChanged', () => {
+            // Refresh on chain change
+            window.location.reload();
+          });
 
-  // Standard style for forms
+          setInitialCheckDone(true);
+        } catch (error) {
+          console.error('Error during initial setup:', error);
+        }
+      }
+    };
+    
+    setupListeners();
+    
+    // Cleanup listeners
+    return () => {
+      if (window.ethereum) {
+        window.ethereum.removeAllListeners();
+      }
+    };
+  }, [onConnect, initialCheckDone]);
+
   return (
     <div>
-      {!account ? (
-        <StyledButton onClick={connectWallet} disabled={isConnecting}>
-          {isConnecting ? 'Connecting...' : 'Connect Wallet'}
-        </StyledButton>
-      ) : (
+      {account ? (
         <div>
-          <StyledButton disabled>Connected: {formatAddress(account)}</StyledButton>
-          {networkName && (
-            <div style={{ textAlign: 'center', marginTop: '5px', fontSize: '12px' }}>
-              Network: {networkName}
-            </div>
-          )}
-          {!isArbitrumSepolia && (
-            <WalletStatus>
-              Please switch to Arbitrum Sepolia network
-            </WalletStatus>
+          <Address>
+            {account.substring(0, 6)}...{account.substring(account.length - 4)}
+            <NetworkBadge isCorrectNetwork={isCorrectNetwork}>
+              {isCorrectNetwork ? 'Arbitrum Sepolia' : networkName}
+            </NetworkBadge>
+          </Address>
+          
+          {!isCorrectNetwork && (
+            <Button 
+              onClick={handleNetworkChange} 
+              style={{ marginTop: '8px' }}
+              buttonStyle={buttonStyle}
+            >
+              Switch to Arbitrum Sepolia
+            </Button>
           )}
         </div>
+      ) : (
+        <Button 
+          onClick={connectWallet} 
+          disabled={isConnecting} 
+          buttonStyle={buttonStyle}
+        >
+          {isConnecting ? 'Connecting...' : 'Connect Wallet'}
+        </Button>
       )}
+      
+      {error && <ErrorMessage>{error}</ErrorMessage>}
     </div>
   );
 };

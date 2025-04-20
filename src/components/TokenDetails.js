@@ -530,15 +530,59 @@ const TokenDetails = () => {
     const fetchTokenDetails = async () => {
       setLoading(true);
       try {
-        // Always use the deployed contract address
-        const tokenAddress = DEPLOYED_CONTRACT_ADDRESS;
-        const tokenInfo = await getTokenInfo(tokenAddress);
+        // Import the token data service
+        const { getTokenDataByShortId } = await import('../utils/tokenDataService');
         
-        setToken(tokenInfo);
+        // Use the shortId from the URL params to get the token data
+        const tokenData = await getTokenDataByShortId(address);
+        
+        if (!tokenData) {
+          throw new Error('Token not found. The link might be invalid or the token does not exist.');
+        }
+        
+        // Get token data from the blockchain for the most up-to-date information
+        const contractAddress = tokenData.contractAddress;
+        let tokenInfo;
+        
+        try {
+          // Try to get the blockchain data
+          tokenInfo = await getTokenInfo(signer?.provider || window.ethereum);
+        } catch (error) {
+          console.warn('Could not fetch blockchain data, using stored data', error);
+          // Fallback to our stored data if blockchain is unavailable
+          tokenInfo = {
+            success: true,
+            tokenName: tokenData.name,
+            tokenSymbol: tokenData.symbol,
+            totalSupply: tokenData.totalSupply,
+            maxSupply: tokenData.maxSupply,
+            imageUrl: tokenData.imageUrl,
+            imageGatewayUrl: tokenData.imageGatewayUrl,
+            isMintable: true,
+            contractAddress: contractAddress
+          };
+        }
+        
+        if (tokenInfo.success) {
+          // Transform the tokenInfo format to be consistent
+          setToken({
+            name: tokenInfo.tokenName,
+            symbol: tokenInfo.tokenSymbol,
+            totalSupply: tokenInfo.totalSupply,
+            maxSupply: tokenInfo.maxSupply,
+            image: tokenInfo.imageGatewayUrl || tokenData.imageGatewayUrl, // Prefer HTTP URL for display
+            contractAddress: contractAddress,
+            isMintable: tokenInfo.isMintable,
+            shortId: address
+          });
+        } else {
+          throw new Error('Failed to fetch token information from the blockchain');
+        }
+        
         setError(null);
       } catch (err) {
         console.error('Error fetching token details:', err);
-        setError('Failed to load token details. Please check the contract address.');
+        setError(err.message || 'Failed to load token details. Please check the token ID.');
       } finally {
         setLoading(false);
       }
@@ -555,13 +599,26 @@ const TokenDetails = () => {
 
     try {
       setMintStatus('Minting tokens...');
-      const result = await mintTokens(mintAmount, signer);
+      // Get the actual contract address from our stored mapping
+      const { getContractAddressFromShortId } = await import('../utils/tokenLinkService');
+      const contractAddress = getContractAddressFromShortId(address);
+      
+      if (!contractAddress) {
+        throw new Error('Invalid token ID');
+      }
+      
+      const result = await mintTokens(mintAmount, contractAddress, signer);
       
       if (result.success) {
         setMintStatus(`Successfully minted ${mintAmount} tokens!`);
         // Refresh token data
-        const tokenInfo = await getTokenInfo(DEPLOYED_CONTRACT_ADDRESS);
-        setToken(tokenInfo);
+        const tokenInfo = await getTokenInfo(signer.provider);
+        if (tokenInfo.success) {
+          setToken(prevToken => ({
+            ...prevToken,
+            totalSupply: tokenInfo.totalSupply
+          }));
+        }
       } else {
         setMintStatus(`Minting failed: ${result.error}`);
       }
@@ -614,10 +671,10 @@ const TokenDetails = () => {
             <DetailItem>
               <DetailLabel>Contract Address:</DetailLabel>
               <DetailValue>
-                <a href={`https://goerli.etherscan.io/address/${DEPLOYED_CONTRACT_ADDRESS}`} 
+                <a href={`https://goerli.etherscan.io/address/${token.contractAddress}`} 
                    target="_blank" 
                    rel="noopener noreferrer">
-                  {DEPLOYED_CONTRACT_ADDRESS.substring(0, 6)}...{DEPLOYED_CONTRACT_ADDRESS.substring(38)}
+                  {token.contractAddress.substring(0, 6)}...{token.contractAddress.substring(38)}
                 </a>
               </DetailValue>
             </DetailItem>

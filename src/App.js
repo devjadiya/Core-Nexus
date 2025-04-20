@@ -12,7 +12,7 @@ import Team from "./components/sections/Team";
 import Faq from "./components/sections/Faq";
 import Footer from "./components/Footer";
 import ScrollToTop from "./components/ScrollToTop";
-import MemeTokenGenerator from "./components/MemeTokenGenerator";
+import TokenCreator from "./components/TokenCreator";
 import TokenDetails from "./components/TokenDetails";
 
 function App() {
@@ -32,7 +32,7 @@ function App() {
               <Faq />
             </>
           } />
-          <Route path="/create" element={<MemeTokenGenerator />} />
+          <Route path="/create" element={<TokenCreator />} />
           <Route path="/token/:address" element={<TokenDetails />} />
         </Routes>
         <Footer />

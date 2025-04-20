@@ -230,7 +230,7 @@ const FileUploadButton = styled.button`
 
 const PreviewContainer = styled.div`
   margin-top: 16px;
-  display: ${props => props.isVisible ? 'block' : 'none'};
+  display: ${props => props.show ? 'block' : 'none'};
   animation: fadeIn 0.5s ease;
   
   @keyframes fadeIn {
@@ -369,13 +369,6 @@ const CloseIcon = () => (
   </svg>
 );
 
-// Create a function to wrap the Error constructor
-function createError(message) {
-  return {
-    message: message
-  };
-}
-
 const TokenCreator = () => {
   const [signer, setSigner] = useState(null);
   const [isDeploying, setIsDeploying] = useState(false);
@@ -443,7 +436,7 @@ const TokenCreator = () => {
       setStatus({ message: '', isError: false });
       
       if (!signer) {
-        throw createError('Please connect your wallet first');
+        throw new Error('Please connect your wallet first');
       }
       
       // Get the account address
@@ -451,17 +444,7 @@ const TokenCreator = () => {
       
       // Upload image to IPFS
       console.log('Uploading image to IPFS...');
-      setStatus({ message: 'Uploading image to IPFS...', isError: false });
-      
-      let imageUrl;
-      const imageFile = data.image[0]; // Store file reference for later use
-      try {
-        imageUrl = await uploadToIPFS(imageFile);
-        setStatus({ message: 'Image uploaded successfully! Deploying token...', isError: false });
-      } catch (uploadError) {
-        console.error('IPFS upload error:', uploadError);
-        throw createError(`Failed to upload image: ${uploadError.message}`);
-      }
+      const imageUrl = await uploadToIPFS(data.image[0]);
       
       // Extract token data
       const tokenName = data.name;
@@ -481,40 +464,17 @@ const TokenCreator = () => {
       );
       
       if (result.success) {
-        // Save token metadata and generate shortId
-        const tokenData = {
-          name: tokenName,
-          symbol: tokenSymbol,
-          description: tokenDescription,
-          totalSupply: initialSupply,
-          maxSupply: initialSupply * 10, // Default max supply is 10x initial supply
-          contractAddress: result.contractAddress,
-          imageFile: imageFile,
-          imageUrl: imageUrl,
-          owner: address
-        };
-        
-        // Import tokenDataService dynamically to avoid circular dependencies
-        const { saveTokenMetadata } = await import('../utils/tokenDataService');
-        const { getShareableTokenLink } = await import('../utils/tokenLinkService');
-        
-        // Save token metadata and get enhanced data with shortId
-        const enhancedTokenData = await saveTokenMetadata(tokenData);
-        
-        // Generate shareable link using the shortId
-        const shareableLink = getShareableTokenLink(result.contractAddress);
-        
         setStatus({
           message: `Token deployed successfully! Contract address: ${result.contractAddress}`,
           isError: false
         });
         
-        // Navigate to token details page using the shareable link
+        // Navigate to token details page
         setTimeout(() => {
-          navigate(shareableLink);
+          navigate(`/token/${result.contractAddress}`);
         }, 2000);
       } else {
-        throw createError(result.error || 'Failed to deploy token');
+        throw new Error(result.error || 'Failed to deploy token');
       }
     } catch (error) {
       console.error('Error:', error);
@@ -637,7 +597,7 @@ const TokenCreator = () => {
         </InputGroup>
         
         {preview.show && (
-          <PreviewContainer isVisible={true}>
+          <PreviewContainer show={preview.show}>
             <PreviewCard>
               <PreviewTitle>Image Preview</PreviewTitle>
               <PreviewImageContainer>

@@ -1,26 +1,82 @@
 import { ethers } from 'ethers';
 import MemeTokenArtifact from '../artifacts/contracts/MemeToken.sol/MemeToken.json';
-import { NFTStorage } from 'nft.storage';
-
-// This is a demo API key. In production, use environment variables or a more secure method
-const NFT_STORAGE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkaWQ6ZXRocjoweEQzODM0MkVCM2MzZjJmYkE2NjU4NTEwMEREOEJhMzg4NzJBMzRDN2EiLCJpc3MiOiJuZnQtc3RvcmFnZSIsImlhdCI6MTcxMzgxMjcwMzg0MywibmFtZSI6Im1lbWV0b2tlbiJ9.g1a2ZdpZJxQ4M1-fCUzLLr2L_VFE0n9JhZ_VdbvnZpQ';
+import { uploadToPinata } from './pinataService';
 
 // Already deployed contract address on Arbitrum Sepolia
 export const DEPLOYED_CONTRACT_ADDRESS = '0xbb221cc04fd19dc695350aadd3367816ec49aea0';
 
-// Function to upload image to IPFS
+// Helper function to create error objects
+function createError(message) {
+  return { message };
+}
+
+// Function to upload image to IPFS using Pinata
 export async function uploadToIPFS(file) {
   try {
-    const client = new NFTStorage({ token: NFT_STORAGE_KEY });
-    
-    // Upload the image
-    const imageBlob = new Blob([file]);
-    const cid = await client.storeBlob(imageBlob);
-    
-    return `ipfs://${cid}`;
+    const result = await uploadToPinata(file);
+    return result.ipfsUrl; // Return the ipfs:// URL
   } catch (error) {
     console.error('Error uploading to IPFS:', error);
-    throw new Error('Failed to upload image to IPFS. Please try again.');
+    throw createError(`Failed to upload image to IPFS: ${error.message}`);
+  }
+}
+
+// Function to deploy a new meme token
+export async function deployMemeToken(name, symbol, initialSupply, description, imageUrl, signer) {
+  try {
+    // Get the signer's address (token owner)
+    const owner = await signer.getAddress();
+    
+    console.log(`Deploying new token: ${name} (${symbol})`);
+    console.log(`Initial supply: ${initialSupply}, Image: ${imageUrl}`);
+    console.log(`Description: ${description}`);
+    
+    // Store description in metadata if needed later
+    // For now we're not using it in the contract directly
+    
+    // Create contract factory
+    const tokenFactory = new ethers.ContractFactory(
+      MemeTokenArtifact.abi,
+      MemeTokenArtifact.bytecode,
+      signer
+    );
+    
+    // Default max supply is 10x initial supply
+    const maxSupply = initialSupply * 10;
+    
+    // Deploy contract with constructor arguments
+    const tokenContract = await tokenFactory.deploy(
+      name,                  // Token name
+      symbol,                // Token symbol
+      initialSupply,         // Initial supply
+      maxSupply,             // Max supply
+      imageUrl,              // Token image IPFS URL
+      owner                  // Token recipient/owner
+    );
+    
+    // Wait for contract to be mined
+    console.log('Waiting for transaction to be mined...');
+    await tokenContract.deployTransaction.wait();
+    
+    console.log(`Token deployed at: ${tokenContract.address}`);
+    
+    return {
+      success: true,
+      contractAddress: tokenContract.address,
+      tokenName: name,
+      tokenSymbol: symbol,
+      initialSupply: initialSupply,
+      maxSupply: maxSupply,
+      imageUrl: imageUrl,
+      description: description,
+      owner: owner
+    };
+  } catch (error) {
+    console.error('Token deployment error:', error);
+    return {
+      success: false,
+      error: error.message
+    };
   }
 }
 
@@ -57,17 +113,20 @@ export async function updateTokenImage(imageUrl, signer) {
   }
 }
 
-// Function to mint tokens on the already deployed contract
-export async function mintTokens(amount, recipientAddress, signer) {
+// Function to mint tokens on a specific contract
+export async function mintTokens(amount, contractAddress, signer) {
   try {
     // Create contract instance
     const tokenContract = new ethers.Contract(
-      DEPLOYED_CONTRACT_ADDRESS,
+      contractAddress,
       MemeTokenArtifact.abi,
       signer
     );
     
-    console.log(`Minting ${amount} tokens to ${recipientAddress}`);
+    // Get recipient address (the signer's address)
+    const recipientAddress = await signer.getAddress();
+    
+    console.log(`Minting ${amount} tokens to ${recipientAddress} on contract ${contractAddress}`);
     // Mint tokens
     const tx = await tokenContract.mint(recipientAddress, amount);
     
@@ -78,7 +137,7 @@ export async function mintTokens(amount, recipientAddress, signer) {
     
     return {
       success: true,
-      contractAddress: DEPLOYED_CONTRACT_ADDRESS,
+      contractAddress,
       amount,
       recipient: recipientAddress
     };
@@ -91,12 +150,12 @@ export async function mintTokens(amount, recipientAddress, signer) {
   }
 }
 
-// Get token info from deployed contract
-export async function getTokenInfo(provider) {
+// Get token info from a specific contract
+export async function getTokenInfo(contractAddress, provider) {
   try {
     // Create contract instance
     const tokenContract = new ethers.Contract(
-      DEPLOYED_CONTRACT_ADDRESS,
+      contractAddress,
       MemeTokenArtifact.abi,
       provider
     );
@@ -113,7 +172,7 @@ export async function getTokenInfo(provider) {
       maxSupply: ethers.utils.formatUnits(info[3], 18),
       imageUrl: info[4],
       isMintable: info[5],
-      contractAddress: DEPLOYED_CONTRACT_ADDRESS
+      contractAddress: contractAddress
     };
   } catch (error) {
     console.error('Error getting token info:', error);
