@@ -5,6 +5,7 @@ import WalletConnect from './WalletConnect';
 import { ethers } from 'ethers';
 import { getTokenInfo, mintTokens, DEPLOYED_CONTRACT_ADDRESS } from '../utils/deployContract';
 import MemeTokenArtifact from '../artifacts/contracts/MemeToken.sol/MemeToken.json';
+import { ipfsToHttpUrl } from '../utils/tokenDataService';
 
 const Container = styled.div`
   max-width: 800px;
@@ -545,19 +546,27 @@ const TokenDetails = () => {
         let tokenInfo;
         
         try {
+          console.log('Fetching blockchain data for contract:', contractAddress);
           // Try to get the blockchain data - FIXED: Pass the contract address
           tokenInfo = await getTokenInfo(contractAddress, signer?.provider || window.ethereum);
+          console.log('Blockchain data fetched successfully:', tokenInfo);
         } catch (error) {
           console.warn('Could not fetch blockchain data, using stored data', error);
+          
+          // Check for ENS-related errors specifically
+          if (error.message && error.message.includes('resolver or addr is not configured for ENS name')) {
+            console.error('ENS error when fetching token info. This is likely due to an IPFS URL issue.');
+          }
+          
           // Fallback to our stored data if blockchain is unavailable
           tokenInfo = {
             success: true,
-            tokenName: tokenData.name,
-            tokenSymbol: tokenData.symbol,
-            totalSupply: tokenData.totalSupply,
-            maxSupply: tokenData.maxSupply,
-            imageUrl: tokenData.imageUrl,
-            imageGatewayUrl: tokenData.imageGatewayUrl,
+            tokenName: tokenData.name || "Unknown Token",
+            tokenSymbol: tokenData.symbol || "???",
+            totalSupply: tokenData.totalSupply || "0",
+            maxSupply: tokenData.maxSupply || "0",
+            imageUrl: tokenData.imageUrl || "",
+            imageGatewayUrl: ipfsToHttpUrl(tokenData.imageUrl) || "",
             isMintable: true,
             contractAddress: contractAddress
           };
@@ -570,13 +579,13 @@ const TokenDetails = () => {
             symbol: tokenInfo.tokenSymbol,
             totalSupply: tokenInfo.totalSupply,
             maxSupply: tokenInfo.maxSupply,
-            image: tokenInfo.imageGatewayUrl || tokenData.imageGatewayUrl, // Prefer HTTP URL for display
+            image: tokenInfo.imageGatewayUrl || ipfsToHttpUrl(tokenInfo.imageUrl) || "", // Prefer HTTP URL for display
             contractAddress: contractAddress,
             isMintable: tokenInfo.isMintable,
             shortId: address
           });
         } else {
-          throw new Error('Failed to fetch token information from the blockchain');
+          throw new Error(tokenInfo.error || 'Failed to fetch token information from the blockchain');
         }
         
         setError(null);

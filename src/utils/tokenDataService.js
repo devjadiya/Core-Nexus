@@ -86,27 +86,24 @@ export const getTokenDataByShortId = async (shortId) => {
   const contractAddress = getContractAddressFromShortId(shortId);
   
   if (!contractAddress) {
+    console.error('Contract address not found for shortId:', shortId);
     return null;
   }
   
   try {
-    // In a real app, you would fetch this from your database or blockchain
-    // For this example, we'll simulate fetching from the blockchain
+    console.log('Found contract address for shortId:', shortId, contractAddress);
     
-    // This is where you would use ethers.js to query the blockchain
-    // const provider = new ethers.providers.Web3Provider(window.ethereum);
-    // const contract = new ethers.Contract(contractAddress, MemeTokenABI, provider);
-    // const tokenInfo = await contract.getTokenInfo();
-    
-    // Simulate token data for demo purposes
+    // In a production app, you would fetch from your database
+    // The contract address is the key data we need to pass to the TokenDetails component
+    // which will then use the address to get real-time data from the blockchain
     const tokenData = {
-      name: "Example Token",
-      symbol: "EXT",
-      totalSupply: "1000000",
-      maxSupply: "10000000",
-      imageUrl: "ipfs://example",
-      imageGatewayUrl: "https://nftstorage.link/ipfs/example",
-      contractAddress,
+      name: "Loading...",       // Will be replaced with blockchain data
+      symbol: "...",            // Will be replaced with blockchain data
+      totalSupply: "0",         // Will be replaced with blockchain data
+      maxSupply: "0",           // Will be replaced with blockchain data
+      imageUrl: "",             // Will be replaced with blockchain data
+      imageGatewayUrl: "",      // Will be replaced with blockchain data
+      contractAddress,          // The most important piece of information
       shortId
     };
     

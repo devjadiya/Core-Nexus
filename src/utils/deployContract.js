@@ -47,6 +47,13 @@ export async function deployMemeToken(name, symbol, initialSupply, description, 
     // Store description in metadata if needed later
     // For now we're not using it in the contract directly
     
+    // Make sure we're not using an IPFS protocol URL directly with ethers.js
+    // If imageUrl is an IPFS URL, make sure it's properly handled
+    // We'll keep the IPFS URL format for the contract storage since it's the standard way
+    if (imageUrl && imageUrl.startsWith('ipfs://')) {
+      console.log('Using IPFS URL for token image:', imageUrl);
+    }
+    
     // Create contract factory
     const tokenFactory = new ethers.ContractFactory(
       MemeTokenArtifact.abi,
@@ -86,6 +93,15 @@ export async function deployMemeToken(name, symbol, initialSupply, description, 
     };
   } catch (error) {
     console.error('Token deployment error:', error);
+    
+    // Check for ENS-related errors and provide a clearer message
+    if (error.message && error.message.includes('resolver or addr is not configured for ENS name')) {
+      return {
+        success: false,
+        error: 'Error with IPFS URL format. Please try again or use a different image.'
+      };
+    }
+    
     return {
       success: false,
       error: error.message
