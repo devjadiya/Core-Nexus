@@ -117,8 +117,8 @@ const About = () => {
         </Box>
         <Box>
           <GradientTitle>
-            The Meme Revolution, <br />
-            <HighlightedText>Total Pointless!</HighlightedText>
+            Pointless Tokens, <br />
+            <HighlightedText>Infinite Craze!</HighlightedText>
           </GradientTitle>
           <SubText>
             $POINTLESS is a meme coin born for fun and chaos on pump.fun — no
