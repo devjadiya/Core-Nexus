@@ -449,18 +449,45 @@ const TokenCreator = () => {
       // Get the account address
       const address = await signer.getAddress();
       
+      // Check if the image file is valid
+      if (!data.image || !data.image[0]) {
+        throw createError('Please select an image file for your token');
+      }
+      
+      const imageFile = data.image[0];
+      console.log('Image file details:', {
+        name: imageFile.name,
+        type: imageFile.type,
+        size: imageFile.size
+      });
+      
+      // Validate file type
+      if (!imageFile.type.startsWith('image/')) {
+        throw createError('Please select a valid image file (JPEG, PNG, GIF, etc.)');
+      }
+      
+      // Validate file size (max 5MB)
+      if (imageFile.size > 5 * 1024 * 1024) {
+        throw createError('Image file is too large. Maximum size is 5MB');
+      }
+      
       // Upload image to IPFS
       console.log('Uploading image to IPFS...');
       setStatus({ message: 'Uploading image to IPFS...', isError: false });
       
       let imageUrl;
-      const imageFile = data.image[0]; // Store file reference for later use
       try {
         imageUrl = await uploadToIPFS(imageFile);
+        console.log('Image uploaded successfully:', imageUrl);
         setStatus({ message: 'Image uploaded successfully! Deploying token...', isError: false });
       } catch (uploadError) {
         console.error('IPFS upload error:', uploadError);
         throw createError(`Failed to upload image: ${uploadError.message}`);
+      }
+      
+      // Verify that we got a valid IPFS URL
+      if (!imageUrl || typeof imageUrl !== 'string' || !imageUrl.startsWith('ipfs://')) {
+        throw createError('Invalid IPFS URL returned from upload. Please try again with a different image.');
       }
       
       // Extract token data

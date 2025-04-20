@@ -23,6 +23,9 @@ contract MemeToken is ERC20, Ownable {
     ) ERC20(name, symbol) Ownable(recipient) {
         require(_maxSupply >= initialSupply, "Max supply must be greater than or equal to initial supply");
         
+        // Validate that _tokenImage is not empty
+        require(bytes(_tokenImage).length > 0, "Token image URL cannot be empty");
+        
         maxSupply = _maxSupply * 10 ** decimals();
         tokenImage = _tokenImage;
         isMintable = true;
@@ -50,6 +53,9 @@ contract MemeToken is ERC20, Ownable {
     
     // Update token image (only owner)
     function updateTokenImage(string memory _newTokenImage) external onlyOwner {
+        // Validate that _newTokenImage is not empty
+        require(bytes(_newTokenImage).length > 0, "Token image URL cannot be empty");
+        
         tokenImage = _newTokenImage;
         emit TokenImageUpdated(_newTokenImage);
     }

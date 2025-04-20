@@ -37,15 +37,25 @@ export async function deployMemeToken(name, symbol, initialSupply, description, 
     // Some IPFS URLs can cause issues with ethers.js due to ENS name resolution
     // The contract will store the URL as a string, so we can normalize it first
     console.log('Original imageUrl type:', typeof imageUrl, 'Value:', imageUrl);
+    
+    // If imageUrl is null, undefined, or empty, use a placeholder
+    if (!imageUrl) {
+      console.warn('Image URL is empty or invalid, using placeholder');
+      imageUrl = "ipfs://placeholder";
+    }
+    
     const safeImageUrl = normalizeIpfsUrl(imageUrl);
     console.log('After normalization:', typeof safeImageUrl, 'Value:', safeImageUrl);
 
     // Add extra validation to make sure we have a valid URL
     if (!safeImageUrl || safeImageUrl === '') {
-      console.error('Invalid image URL after normalization');
+      console.error('Invalid image URL after normalization, using fallback');
+      // Provide a fallback IPFS URL to avoid contract revert
+      const fallbackUrl = "ipfs://QmXwWd8N5qDyYKCB3rNUhjpxzHbYnmH2yZvzttcrTNyBjq";
       return {
         success: false,
-        error: 'Invalid image URL format. Please try again with a different image.'
+        error: 'Invalid image URL format. Please try again with a different image.',
+        fallbackUrl
       };
     }
     
@@ -102,6 +112,14 @@ export async function deployMemeToken(name, symbol, initialSupply, description, 
       return {
         success: false,
         error: 'Error with IPFS URL format. Please try again or use a different image.'
+      };
+    }
+    
+    // Check for contract revert due to empty image URL
+    if (error.message && error.message.includes('Token image URL cannot be empty')) {
+      return {
+        success: false,
+        error: 'Image URL cannot be empty. Please upload an image and try again.'
       };
     }
     
