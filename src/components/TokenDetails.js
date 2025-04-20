@@ -5,7 +5,7 @@ import WalletConnect from './WalletConnect';
 import { ethers } from 'ethers';
 import { getTokenInfo, mintTokens, DEPLOYED_CONTRACT_ADDRESS } from '../utils/deployContract';
 import MemeTokenArtifact from '../artifacts/contracts/MemeToken.sol/MemeToken.json';
-import { ipfsToHttpUrl } from '../utils/tokenDataService';
+import { ipfsToHttpUrl } from '../utils/ipfsHelper';
 
 const Container = styled.div`
   max-width: 800px;
