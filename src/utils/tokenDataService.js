@@ -1,5 +1,6 @@
 import { saveTokenData, getContractAddressFromShortId } from './tokenLinkService';
 import { uploadToPinata } from './pinataService';
+import { normalizeIpfsUrl, ipfsToHttpUrl } from './ipfsHelper';
 
 /**
  * Upload image to IPFS using Pinata
@@ -8,28 +9,17 @@ import { uploadToPinata } from './pinataService';
  */
 export const uploadImageToIPFS = async (file) => {
   try {
-    return await uploadToPinata(file);
+    const result = await uploadToPinata(file);
+    // Make sure to normalize the IPFS URL before returning
+    const normalizedUrl = normalizeIpfsUrl(result.ipfsUrl);
+    return {
+      ipfsUrl: normalizedUrl,
+      gatewayUrl: ipfsToHttpUrl(normalizedUrl)
+    };
   } catch (error) {
     console.error('Error uploading to IPFS:', error);
     throw new Error(`Failed to upload image to IPFS: ${error.message}`);
   }
-};
-
-/**
- * Convert IPFS URL to HTTP gateway URL
- * @param {string} ipfsUrl - The IPFS URL (ipfs://...)
- * @returns {string} - HTTP gateway URL
- */
-export const ipfsToHttpUrl = (ipfsUrl) => {
-  if (!ipfsUrl || !ipfsUrl.startsWith('ipfs://')) {
-    return ipfsUrl; // Return as is if not an IPFS URL
-  }
-  
-  // Extract the CID (hash) from the IPFS URL
-  const cid = ipfsUrl.replace('ipfs://', '');
-  
-  // Return the Pinata gateway URL
-  return `https://gateway.pinata.cloud/ipfs/${cid}`;
 };
 
 /**

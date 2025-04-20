@@ -1,6 +1,7 @@
 import { ethers } from 'ethers';
 import MemeTokenArtifact from '../artifacts/contracts/MemeToken.sol/MemeToken.json';
 import { uploadToPinata } from './pinataService';
+import { normalizeIpfsUrl, ipfsToHttpUrl } from './ipfsHelper';
 
 // Already deployed contract address on Arbitrum Sepolia
 export const DEPLOYED_CONTRACT_ADDRESS = '0xbb221cc04fd19dc695350aadd3367816ec49aea0';
@@ -10,24 +11,12 @@ function createError(message) {
   return { message };
 }
 
-// Convert IPFS URL to HTTP gateway URL
-function ipfsToHttpUrl(ipfsUrl) {
-  if (!ipfsUrl || !ipfsUrl.startsWith('ipfs://')) {
-    return ipfsUrl; // Return as is if not an IPFS URL
-  }
-  
-  // Extract the CID (hash) from the IPFS URL
-  const cid = ipfsUrl.replace('ipfs://', '');
-  
-  // Return the Pinata gateway URL
-  return `https://gateway.pinata.cloud/ipfs/${cid}`;
-}
-
 // Function to upload image to IPFS using Pinata
 export async function uploadToIPFS(file) {
   try {
     const result = await uploadToPinata(file);
-    return result.ipfsUrl; // Return the ipfs:// URL
+    // Make sure we get a normalized IPFS URL
+    return normalizeIpfsUrl(result.ipfsUrl);
   } catch (error) {
     console.error('Error uploading to IPFS:', error);
     throw createError(`Failed to upload image to IPFS: ${error.message}`);
@@ -44,15 +33,11 @@ export async function deployMemeToken(name, symbol, initialSupply, description, 
     console.log(`Initial supply: ${initialSupply}, Image: ${imageUrl}`);
     console.log(`Description: ${description}`);
     
-    // Store description in metadata if needed later
-    // For now we're not using it in the contract directly
-    
-    // Make sure we're not using an IPFS protocol URL directly with ethers.js
-    // If imageUrl is an IPFS URL, make sure it's properly handled
-    // We'll keep the IPFS URL format for the contract storage since it's the standard way
-    if (imageUrl && imageUrl.startsWith('ipfs://')) {
-      console.log('Using IPFS URL for token image:', imageUrl);
-    }
+    // Important fix: If the imageUrl is an IPFS URL, ensure it's a valid format
+    // Some IPFS URLs can cause issues with ethers.js due to ENS name resolution
+    // The contract will store the URL as a string, so we can normalize it first
+    const safeImageUrl = normalizeIpfsUrl(imageUrl);
+    console.log('Using normalized IPFS URL for deployment:', safeImageUrl);
     
     // Create contract factory
     const tokenFactory = new ethers.ContractFactory(
@@ -70,7 +55,7 @@ export async function deployMemeToken(name, symbol, initialSupply, description, 
       symbol,                // Token symbol
       initialSupply,         // Initial supply
       maxSupply,             // Max supply
-      imageUrl,              // Token image IPFS URL
+      safeImageUrl,          // Token image IPFS URL (normalized)
       owner                  // Token recipient/owner
     );
     
@@ -87,7 +72,7 @@ export async function deployMemeToken(name, symbol, initialSupply, description, 
       tokenSymbol: symbol,
       initialSupply: initialSupply,
       maxSupply: maxSupply,
-      imageUrl: imageUrl,
+      imageUrl: safeImageUrl,  // Return the normalized URL
       description: description,
       owner: owner
     };
@@ -193,8 +178,8 @@ export async function getTokenInfo(contractAddress, provider) {
     const info = await tokenContract.getTokenInfo();
     
     // Convert IPFS URL to HTTP URL for frontend display
-    const imageUrl = info[4]; // Original IPFS URL
-    const gatewayUrl = ipfsToHttpUrl(imageUrl); // HTTP URL
+    const imageUrl = normalizeIpfsUrl(info[4]); // Normalize IPFS URL
+    const gatewayUrl = ipfsToHttpUrl(imageUrl); // Convert to HTTP URL
     
     // Format token information
     return {

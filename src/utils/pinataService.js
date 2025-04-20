@@ -58,8 +58,8 @@ export const uploadToPinata = async (file) => {
     // Get the IPFS hash (CID) from the response
     const ipfsHash = response.data.IpfsHash;
     
-    // Create IPFS URL
-    const ipfsUrl = `ipfs://${ipfsHash}`;
+    // Create normalized IPFS URL (just the CID, no path or query parameters)
+    const ipfsUrl = `ipfs://${ipfsHash.trim()}`;
     
     // Create gateway URL for easy viewing
     const gatewayUrl = `https://gateway.pinata.cloud/ipfs/${ipfsHash}`;

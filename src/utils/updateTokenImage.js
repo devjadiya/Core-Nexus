@@ -1,5 +1,6 @@
 import { ethers } from 'ethers';
 import MemeTokenArtifact from '../artifacts/contracts/MemeToken.sol/MemeToken.json';
+import { normalizeIpfsUrl } from './ipfsHelper';
 
 /**
  * Update token image on a specific contract
@@ -17,10 +18,12 @@ export async function updateTokenImage(imageUrl, contractAddress, signer) {
       signer
     );
     
-    console.log(`Updating token image to: ${imageUrl}`);
+    // Normalize IPFS URL if needed
+    const normalizedImageUrl = normalizeIpfsUrl(imageUrl);
+    console.log(`Updating token image to: ${normalizedImageUrl}`);
     
-    // Update token image
-    const tx = await tokenContract.updateTokenImage(imageUrl);
+    // Update token image with normalized URL
+    const tx = await tokenContract.updateTokenImage(normalizedImageUrl);
     
     // Wait for transaction to be mined
     console.log('Waiting for transaction to be mined...');
@@ -30,7 +33,7 @@ export async function updateTokenImage(imageUrl, contractAddress, signer) {
     return {
       success: true,
       contractAddress,
-      imageUrl
+      imageUrl: normalizedImageUrl
     };
   } catch (error) {
     console.error('Token image update error:', error);
