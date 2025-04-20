@@ -545,8 +545,8 @@ const TokenDetails = () => {
         let tokenInfo;
         
         try {
-          // Try to get the blockchain data
-          tokenInfo = await getTokenInfo(signer?.provider || window.ethereum);
+          // Try to get the blockchain data - FIXED: Pass the contract address
+          tokenInfo = await getTokenInfo(contractAddress, signer?.provider || window.ethereum);
         } catch (error) {
           console.warn('Could not fetch blockchain data, using stored data', error);
           // Fallback to our stored data if blockchain is unavailable
@@ -612,7 +612,7 @@ const TokenDetails = () => {
       if (result.success) {
         setMintStatus(`Successfully minted ${mintAmount} tokens!`);
         // Refresh token data
-        const tokenInfo = await getTokenInfo(signer.provider);
+        const tokenInfo = await getTokenInfo(contractAddress, signer.provider);
         if (tokenInfo.success) {
           setToken(prevToken => ({
             ...prevToken,

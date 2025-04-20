@@ -16,6 +16,23 @@ export const uploadImageToIPFS = async (file) => {
 };
 
 /**
+ * Convert IPFS URL to HTTP gateway URL
+ * @param {string} ipfsUrl - The IPFS URL (ipfs://...)
+ * @returns {string} - HTTP gateway URL
+ */
+export const ipfsToHttpUrl = (ipfsUrl) => {
+  if (!ipfsUrl || !ipfsUrl.startsWith('ipfs://')) {
+    return ipfsUrl; // Return as is if not an IPFS URL
+  }
+  
+  // Extract the CID (hash) from the IPFS URL
+  const cid = ipfsUrl.replace('ipfs://', '');
+  
+  // Return the Pinata gateway URL
+  return `https://gateway.pinata.cloud/ipfs/${cid}`;
+};
+
+/**
  * Save complete token metadata
  * @param {Object} tokenData - Token data including contractAddress, name, symbol, etc.
  * @returns {Promise<Object>} - Enhanced token data with shortId and metadata

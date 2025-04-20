@@ -10,6 +10,19 @@ function createError(message) {
   return { message };
 }
 
+// Convert IPFS URL to HTTP gateway URL
+function ipfsToHttpUrl(ipfsUrl) {
+  if (!ipfsUrl || !ipfsUrl.startsWith('ipfs://')) {
+    return ipfsUrl; // Return as is if not an IPFS URL
+  }
+  
+  // Extract the CID (hash) from the IPFS URL
+  const cid = ipfsUrl.replace('ipfs://', '');
+  
+  // Return the Pinata gateway URL
+  return `https://gateway.pinata.cloud/ipfs/${cid}`;
+}
+
 // Function to upload image to IPFS using Pinata
 export async function uploadToIPFS(file) {
   try {
@@ -163,6 +176,10 @@ export async function getTokenInfo(contractAddress, provider) {
     // Get token information
     const info = await tokenContract.getTokenInfo();
     
+    // Convert IPFS URL to HTTP URL for frontend display
+    const imageUrl = info[4]; // Original IPFS URL
+    const gatewayUrl = ipfsToHttpUrl(imageUrl); // HTTP URL
+    
     // Format token information
     return {
       success: true,
@@ -170,7 +187,8 @@ export async function getTokenInfo(contractAddress, provider) {
       tokenSymbol: info[1],
       totalSupply: ethers.utils.formatUnits(info[2], 18),
       maxSupply: ethers.utils.formatUnits(info[3], 18),
-      imageUrl: info[4],
+      imageUrl: imageUrl,
+      imageGatewayUrl: gatewayUrl, // Add gateway URL for display
       isMintable: info[5],
       contractAddress: contractAddress
     };
